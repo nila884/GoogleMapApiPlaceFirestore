@@ -1,0 +1,2 @@
+rootProject.name='SavePlaces'
+include ':app'

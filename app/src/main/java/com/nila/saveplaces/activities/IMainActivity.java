@@ -1,6 +1,6 @@
 package com.nila.saveplaces.activities;
 
-public interface IhomeActivity {
+public interface IMainActivity {
 
     void createNewNote(String locationName);
 

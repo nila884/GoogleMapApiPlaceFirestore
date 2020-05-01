@@ -12,8 +12,8 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
-import com.nila.lifttwo.R;
-import com.nila.lifttwo.activities.IhomeActivity;
+import com.nila.saveplaces.R;
+import com.nila.saveplaces.activities.IMainActivity;
 
 /**
  * Created by User on 5/14/2018.
@@ -26,7 +26,7 @@ public class NewPlaceDialog extends DialogFragment implements View.OnClickListen
     //widgets
     private EditText mPlace;
     private TextView mCreate, mCancel;
-    private IhomeActivity ihomeActivity;
+    private IMainActivity ihomeActivity;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -85,7 +85,7 @@ public class NewPlaceDialog extends DialogFragment implements View.OnClickListen
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        ihomeActivity = (IhomeActivity)getActivity();
+        ihomeActivity = (IMainActivity) getActivity();
     }
 }
 

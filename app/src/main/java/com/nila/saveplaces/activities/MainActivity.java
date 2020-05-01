@@ -25,10 +25,18 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.nila.saveplaces.R;
+import com.nila.saveplaces.fragments.NewPlaceDialog;
+import com.nila.saveplaces.models.MyLocation;
 
 public class MainActivity extends FragmentActivity implements GoogleMap.OnMyLocationButtonClickListener,
-        GoogleMap.OnMyLocationClickListener, OnMapReadyCallback   {
+        GoogleMap.OnMyLocationClickListener, OnMapReadyCallback ,IMainActivity  {
 
 
     private static final String TAG = "HomeActivity";
@@ -42,13 +50,17 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMyLoca
     private static final String COURSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private FusedLocationProviderClient mfusedLocationProviderClient;
+    private MyLocation myLocation;
+    private FirebaseFirestore mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mDb=FirebaseFirestore.getInstance();
         if(isServicesOK()){
             getLocationPermission();
+
         }
 
         else {
@@ -210,6 +222,10 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMyLoca
     @Override
     public void onMyLocationClick(@NonNull Location location) {
         Toast.makeText(this, "Current location:\n" + location, Toast.LENGTH_LONG).show();
+        GeoPoint geoPoint = new GeoPoint(location.getLatitude(), location.getLongitude());
+        myLocation=new MyLocation(geoPoint);
+        NewPlaceDialog newPlaceDialog=new NewPlaceDialog();
+        newPlaceDialog.show(getSupportFragmentManager(),"new location");
     }
 
     @Override
@@ -220,4 +236,54 @@ public class MainActivity extends FragmentActivity implements GoogleMap.OnMyLoca
         return false;
     }
 
+    @Override
+    public void createNewNote(String locationName) {
+
+        ;
+        DocumentReference newNoteRef = mDb
+                .collection("Bus_Stop_Locations")
+                .document();
+        this.myLocation.setPlaceName(locationName);
+
+        newNoteRef.set(myLocation).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if(task.isSuccessful()){
+                    Toast.makeText(MainActivity.this, "location coordinate save successfully", Toast.LENGTH_SHORT).show();
+                    getSavedLocation();
+                }
+                else{
+                    Toast.makeText(MainActivity.this, "location coordinate not save", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+    }
+
+    private void getSavedLocation() {
+        this.mDb.collection("Bus_Stop_Locations")
+                .get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    for(QueryDocumentSnapshot document: task.getResult()){
+                        MyLocation myLoc = document.toObject(MyLocation.class);
+
+                        makeMarkerOnLocation(myLoc);
+                        Log.d(TAG, "making marker on saved location ");
+                    }
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "error to find saved places", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    private void makeMarkerOnLocation(MyLocation myLoc) {
+        Log.d(TAG, "creating marker method");
+        mMap.addMarker(new MarkerOptions().position(new LatLng(myLoc.getGeo_point().getLatitude(),myLoc.getGeo_point().getLongitude()))
+                .title(myLoc.getPlaceName()));
+
+    }
 }
